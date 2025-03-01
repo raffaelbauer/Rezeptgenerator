@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rezeptgenerator</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #adff77, #ffffff);
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px 40px 40px 40px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    h1 {
+      text-align: center;
+      color: #adff77;
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-top: 20px;
+      color: #333;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border: 2px solid #adff77;
+      border-radius: 6px;
+    }
+    .ingredient {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .ingredient input {
+      flex: 1;
+    }
+    button {
+      margin-top: 25px;
+      padding: 12px;
+      background-color: #adff77;
+      border: none;
+      color: #333;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #98d768;
+    }
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 14px;
+      color: #777;
+    }
+    footer a {
+      color: #000;
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Rezeptgenerator</h1>
+    <form id="recipeForm">
+      <label for="recipeName">Rezeptname:</label>
+      <input type="text" id="recipeName" name="recipeName" required>
+      
+      <label>Zutaten (bitte jeweils Zutat und Menge angeben):</label>
+      <div id="ingredientsList">
+        <div class="ingredient">
+          <input type="text" placeholder="Zutat" name="ingredient[]" required>
+          <input type="text" placeholder="Menge" name="amount[]" required>
+        </div>
+      </div>
+      <button type="button" onclick="addIngredient()">Weitere Zutat hinzufügen</button>
+
+      <label for="preparation">Zubereitungsschritte:</label>
+      <textarea id="preparation" name="preparation" rows="5" required></textarea>
+
+      <label for="imageUpload">Bild hochladen (optional):</label>
+      <input type="file" id="imageUpload" name="imageUpload" accept="image/*">
+
+      <button type="submit">PDF generieren</button>
+    </form>
+  </div>
+  <footer>
+    <p>&copy; 2025 Raffael Bauer. Alle Rechte vorbehalten.</p>
+    <p>
+      <a href="https://raffaelbauer.github.io/Impressum/">Impressum</a> | 
+      <a href="https://raffaelbauer.github.io/Datenschutzbestimmungen/">Datenschutzbestimmungen</a>
+    </p>
+  </footer>
+  <script>
+    function addIngredient() {
+      const div = document.createElement('div');
+      div.className = 'ingredient';
+      div.innerHTML = '<input type="text" placeholder="Zutat" name="ingredient[]" required> <input type="text" placeholder="Menge" name="amount[]" required>';
+      document.getElementById('ingredientsList').appendChild(div);
+    }
+    document.getElementById('recipeForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('PDF generiert! (Serverseitige Logik muss noch implementiert werden)');
+    });
+  </script>
+</body>
+</html>

@@ -105,6 +105,8 @@
       <a href="https://raffaelbauer.github.io/Datenschutzbestimmungen/">Datenschutzbestimmungen</a>
     </p>
   </footer>
+  <!-- jsPDF Bibliothek -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     function addIngredient() {
       const div = document.createElement('div');
@@ -112,9 +114,33 @@
       div.innerHTML = '<input type="text" placeholder="Zutat" name="ingredient[]" required> <input type="text" placeholder="Menge" name="amount[]" required>';
       document.getElementById('ingredientsList').appendChild(div);
     }
+
     document.getElementById('recipeForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      alert('PDF generiert! (Serverseitige Logik muss noch implementiert werden)');
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let yPos = 10;
+      const recipeName = document.getElementById('recipeName').value;
+      doc.setFontSize(16);
+      doc.text("Rezept: " + recipeName, 10, yPos);
+      yPos += 10;
+      doc.setFontSize(12);
+      doc.text("Zutaten:", 10, yPos);
+      yPos += 10;
+      const ingredients = document.querySelectorAll('#ingredientsList .ingredient');
+      ingredients.forEach(function(ing) {
+        const inputs = ing.getElementsByTagName('input');
+        const ingredient = inputs[0].value;
+        const amount = inputs[1].value;
+        doc.text("- " + ingredient + ": " + amount, 10, yPos);
+        yPos += 10;
+      });
+      yPos += 5;
+      const preparation = document.getElementById('preparation').value;
+      doc.text("Zubereitung:", 10, yPos);
+      yPos += 10;
+      doc.text(preparation, 10, yPos);
+      doc.save(recipeName + ".pdf");
     });
   </script>
 </body>

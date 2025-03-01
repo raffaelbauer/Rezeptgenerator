@@ -5,36 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rezeptgenerator</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
       font-family: 'Roboto', sans-serif;
-      background: linear-gradient(135deg, #adff77, #ffffff);
+      background: linear-gradient(135deg, #b430cf, #adff77, #be7546, #ffffff);
       margin: 0;
       padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
     }
     .container {
       max-width: 900px;
-      margin: 30px auto;
       background: #fff;
       border-radius: 10px;
-      padding: 20px 40px 40px 40px;
+      padding: 30px 50px 50px 50px;
       box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      text-align: center;
     }
     h1 {
-      text-align: center;
-      color: #adff77;
+      background: linear-gradient(135deg, #adff77, #b430cf);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
       margin-bottom: 10px;
     }
     label {
       display: block;
       margin-top: 20px;
       color: #333;
+      text-align: left;
     }
     input, textarea {
       width: 100%;
       padding: 12px;
       margin-top: 8px;
-      border: 2px solid #adff77;
+      border: 2px solid;
+      border-image: linear-gradient(135deg, #be7546, #adff77, #b430cf) 1;
       border-radius: 6px;
     }
     .ingredient {
@@ -48,7 +57,7 @@
     button {
       margin-top: 25px;
       padding: 12px;
-      background-color: #adff77;
+      background: linear-gradient(135deg, #adff77, #b430cf);
       border: none;
       color: #333;
       border-radius: 6px;
@@ -56,13 +65,15 @@
       font-size: 16px;
     }
     button:hover {
-      background-color: #98d768;
+      background: linear-gradient(135deg, #b430cf, #adff77);
     }
     footer {
       text-align: center;
-      margin-top: 30px;
       font-size: 14px;
       color: #777;
+      margin-top: 30px;
+      width: 100%;
+      padding-bottom: 20px;
     }
     footer a {
       color: #000;
@@ -80,116 +91,72 @@
       <label for="recipeName">Rezeptname:</label>
       <input type="text" id="recipeName" name="recipeName" required>
       
+      <label for="servings">Portionen:</label>
+      <input type="number" id="servings" name="servings" min="1" required>
+      
       <label>Zutaten (bitte jeweils Zutat und Menge angeben):</label>
       <div id="ingredientsList">
         <div class="ingredient">
           <input type="text" placeholder="Zutat" name="ingredient[]" required>
-          <input type="text" placeholder="Menge" name="amount[]" required>
+          <input type="text" placeholder="Menge in Gramm" name="amount[]" required>
         </div>
       </div>
       <button type="button" onclick="addIngredient()">Weitere Zutat hinzufügen</button>
 
       <label for="preparation">Zubereitungsschritte:</label>
       <textarea id="preparation" name="preparation" rows="5" required></textarea>
-
-      <label for="imageUpload">Bild hochladen (optional, wird im PDF angezeigt):</label>
+      
+      <label for="imageUpload">Bild hochladen (optional):</label>
       <input type="file" id="imageUpload" name="imageUpload" accept="image/*">
-
+      
       <button type="submit">PDF generieren</button>
     </form>
   </div>
   <footer>
     <p>&copy; 2025 Raffael Bauer. Alle Rechte vorbehalten.</p>
     <p>
-      <a href="https://raffaelbauer.github.io/Impressum/">Impressum</a> | 
-      <a href="https://raffaelbauer.github.io/Datenschutzbestimmungen/">Datenschutzbestimmungen</a>
+      <a href="https://raffaelbauer.github.io/Datenschutzerklaerung/">Datenschutzbestimmungen</a>
     </p>
   </footer>
-  <!-- jsPDF Bibliothek -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     function addIngredient() {
       const div = document.createElement('div');
       div.className = 'ingredient';
-      div.innerHTML = '<input type="text" placeholder="Zutat" name="ingredient[]" required> <input type="text" placeholder="Menge" name="amount[]" required>';
+      div.innerHTML = '<input type="text" placeholder="Zutat" name="ingredient[]" required> <input type="text" placeholder="Menge in Gramm" name="amount[]" required>';
       document.getElementById('ingredientsList').appendChild(div);
     }
-
+    
     document.getElementById('recipeForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const { jsPDF } = window.jspdf;
+      const doc = new jsPDF("p", "mm", "a4");
       const recipeName = document.getElementById('recipeName').value;
+      const servings = document.getElementById('servings').value;
       
-      // Funktion zur PDF-Erstellung, die ein Bild (DataURL) optional einbindet
-      function generatePDF(imageData, imageType) {
-        const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-        // Header mit Farbe #adffda (RGB: 173, 255, 218)
-        doc.setFillColor(173, 255, 218);
-        doc.rect(0, 0, 210, 30, 'F');
-        doc.setFontSize(22);
-        doc.setTextColor(255, 255, 255);
-        doc.text(recipeName, 105, 20, { align: 'center' });
-        
-        let yPos = 35; // Startposition unter dem Header
-        
-        // Falls ein Bild hochgeladen wurde, im PDF einfügen
-        if(imageData) {
-          // Bild zentriert (Breite 100mm, Höhe 60mm)
-          const imgWidth = 100, imgHeight = 60;
-          const xPos = (210 - imgWidth) / 2;
-          doc.addImage(imageData, imageType, xPos, yPos, imgWidth, imgHeight);
-          yPos += imgHeight + 10;
-        }
-        
-        // Zutaten zentriert anzeigen
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(16);
-        doc.text("Zutaten:", 105, yPos, { align: 'center' });
-        yPos += 10;
-        doc.setFontSize(12);
-        const ingredientLines = [];
-        const ingredients = document.querySelectorAll('#ingredientsList .ingredient');
-        ingredients.forEach(function(ing) {
-          const inputs = ing.getElementsByTagName('input');
-          const ingredient = inputs[0].value;
-          const amount = inputs[1].value;
-          ingredientLines.push("- " + ingredient + ": " + amount);
-        });
-        ingredientLines.forEach(function(line) {
-          doc.text(line, 105, yPos, { align: 'center' });
-          yPos += 7;
-        });
-        
-        yPos += 5;
-        doc.setFontSize(16);
-        doc.text("Zubereitung:", 105, yPos, { align: 'center' });
-        yPos += 10;
-        doc.setFontSize(12);
-        const preparation = document.getElementById('preparation').value;
-        const textLines = doc.splitTextToSize(preparation, 180);
-        doc.text(textLines, 105, yPos, { align: 'center' });
-        
-        // Footer
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text("Erstellt mit Raffaels Rezeptgenerator", 105, 285, { align: 'center' });
-        
-        doc.save(recipeName + ".pdf");
-      }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.text(recipeName, 10, 20);
+      doc.setFontSize(14);
+      doc.text(`Portionen: ${servings}`, 10, 30);
       
-      // Überprüfen, ob ein Bild hochgeladen wurde
-      const imageInput = document.getElementById('imageUpload');
-      if (imageInput.files && imageInput.files[0]) {
-        const file = imageInput.files[0];
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-          // evt.target.result enthält den DataURL des Bildes
-          generatePDF(evt.target.result, file.type);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        generatePDF(null, null);
-      }
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(16);
+      doc.text("Zutaten:", 10, 40);
+      let yPos = 50;
+      document.querySelectorAll('#ingredientsList .ingredient').forEach((ing) => {
+        const inputs = ing.getElementsByTagName('input');
+        doc.text(`- ${inputs[0].value}: ${inputs[1].value}g`, 10, yPos);
+        yPos += 7;
+      });
+      
+      yPos += 10;
+      doc.setFontSize(16);
+      doc.text("Zubereitung:", 10, yPos);
+      yPos += 10;
+      doc.setFontSize(12);
+      doc.text(document.getElementById('preparation').value, 10, yPos, { maxWidth: 190 });
+      
+      doc.save(recipeName + ".pdf");
     });
   </script>
 </body>

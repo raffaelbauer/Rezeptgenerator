@@ -92,7 +92,7 @@
       <label for="preparation">Zubereitungsschritte:</label>
       <textarea id="preparation" name="preparation" rows="5" required></textarea>
 
-      <label for="imageUpload">Bild hochladen (optional):</label>
+      <label for="imageUpload">Bild hochladen (optional, wird aber nicht im PDF angezeigt):</label>
       <input type="file" id="imageUpload" name="imageUpload" accept="image/*">
 
       <button type="submit">PDF generieren</button>
@@ -118,28 +118,50 @@
     document.getElementById('recipeForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      let yPos = 10;
+      const doc = new jsPDF({
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Header Design
+      doc.setFillColor(173, 255, 119); // #adff77
+      doc.rect(0, 0, 210, 30, 'F');
+      doc.setFontSize(22);
+      doc.setTextColor(255, 255, 255);
       const recipeName = document.getElementById('recipeName').value;
+      doc.text(recipeName, 105, 20, { align: 'center' });
+      
+      // Inhaltsbereich
+      let yPos = 40;
+      doc.setTextColor(0, 0, 0);
       doc.setFontSize(16);
-      doc.text("Rezept: " + recipeName, 10, yPos);
-      yPos += 10;
-      doc.setFontSize(12);
       doc.text("Zutaten:", 10, yPos);
       yPos += 10;
+      doc.setFontSize(12);
       const ingredients = document.querySelectorAll('#ingredientsList .ingredient');
       ingredients.forEach(function(ing) {
         const inputs = ing.getElementsByTagName('input');
         const ingredient = inputs[0].value;
         const amount = inputs[1].value;
         doc.text("- " + ingredient + ": " + amount, 10, yPos);
-        yPos += 10;
+        yPos += 7;
       });
+      
       yPos += 5;
-      const preparation = document.getElementById('preparation').value;
+      doc.setFontSize(16);
       doc.text("Zubereitung:", 10, yPos);
       yPos += 10;
-      doc.text(preparation, 10, yPos);
+      doc.setFontSize(12);
+      // Aufteilen des Textes in Zeilen, falls er zu lang ist
+      const preparation = document.getElementById('preparation').value;
+      const textLines = doc.splitTextToSize(preparation, 190);
+      doc.text(textLines, 10, yPos);
+      
+      // Footer im PDF
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text("Erstellt mit Rezeptgenerator", 105, 290, { align: 'center' });
+      
       doc.save(recipeName + ".pdf");
     });
   </script>

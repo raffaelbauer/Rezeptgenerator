@@ -92,7 +92,7 @@
       <label for="preparation">Zubereitungsschritte:</label>
       <textarea id="preparation" name="preparation" rows="5" required></textarea>
 
-      <label for="imageUpload">Bild hochladen (optional, wird aber nicht im PDF angezeigt):</label>
+      <label for="imageUpload">Bild hochladen (optional, wird im PDF angezeigt):</label>
       <input type="file" id="imageUpload" name="imageUpload" accept="image/*">
 
       <button type="submit">PDF generieren</button>
@@ -118,51 +118,78 @@
     document.getElementById('recipeForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      // Header Design
-      doc.setFillColor(173, 255, 119); // #adff77
-      doc.rect(0, 0, 210, 30, 'F');
-      doc.setFontSize(22);
-      doc.setTextColor(255, 255, 255);
       const recipeName = document.getElementById('recipeName').value;
-      doc.text(recipeName, 105, 20, { align: 'center' });
       
-      // Inhaltsbereich
-      let yPos = 40;
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(16);
-      doc.text("Zutaten:", 10, yPos);
-      yPos += 10;
-      doc.setFontSize(12);
-      const ingredients = document.querySelectorAll('#ingredientsList .ingredient');
-      ingredients.forEach(function(ing) {
-        const inputs = ing.getElementsByTagName('input');
-        const ingredient = inputs[0].value;
-        const amount = inputs[1].value;
-        doc.text("- " + ingredient + ": " + amount, 10, yPos);
-        yPos += 7;
-      });
+      // Funktion zur PDF-Erstellung, die ein Bild (DataURL) optional einbindet
+      function generatePDF(imageData, imageType) {
+        const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+        // Header mit Farbe #adffda (RGB: 173, 255, 218)
+        doc.setFillColor(173, 255, 218);
+        doc.rect(0, 0, 210, 30, 'F');
+        doc.setFontSize(22);
+        doc.setTextColor(255, 255, 255);
+        doc.text(recipeName, 105, 20, { align: 'center' });
+        
+        let yPos = 35; // Startposition unter dem Header
+        
+        // Falls ein Bild hochgeladen wurde, im PDF einfügen
+        if(imageData) {
+          // Bild zentriert (Breite 100mm, Höhe 60mm)
+          const imgWidth = 100, imgHeight = 60;
+          const xPos = (210 - imgWidth) / 2;
+          doc.addImage(imageData, imageType, xPos, yPos, imgWidth, imgHeight);
+          yPos += imgHeight + 10;
+        }
+        
+        // Zutaten zentriert anzeigen
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(16);
+        doc.text("Zutaten:", 105, yPos, { align: 'center' });
+        yPos += 10;
+        doc.setFontSize(12);
+        const ingredientLines = [];
+        const ingredients = document.querySelectorAll('#ingredientsList .ingredient');
+        ingredients.forEach(function(ing) {
+          const inputs = ing.getElementsByTagName('input');
+          const ingredient = inputs[0].value;
+          const amount = inputs[1].value;
+          ingredientLines.push("- " + ingredient + ": " + amount);
+        });
+        ingredientLines.forEach(function(line) {
+          doc.text(line, 105, yPos, { align: 'center' });
+          yPos += 7;
+        });
+        
+        yPos += 5;
+        doc.setFontSize(16);
+        doc.text("Zubereitung:", 105, yPos, { align: 'center' });
+        yPos += 10;
+        doc.setFontSize(12);
+        const preparation = document.getElementById('preparation').value;
+        const textLines = doc.splitTextToSize(preparation, 180);
+        doc.text(textLines, 105, yPos, { align: 'center' });
+        
+        // Footer
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text("erstellt mit raffaels rezeptgenerator", 105, 285, { align: 'center' });
+        
+        doc.save(recipeName + ".pdf");
+      }
       
-      yPos += 5;
-      doc.setFontSize(16);
-      doc.text("Zubereitung:", 10, yPos);
-      yPos += 10;
-      doc.setFontSize(12);
-      // Aufteilen des Textes in Zeilen, falls er zu lang ist
-      const preparation = document.getElementById('preparation').value;
-      const textLines = doc.splitTextToSize(preparation, 190);
-      doc.text(textLines, 10, yPos);
-      
-      // Footer im PDF
-      doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.text("Erstellt mit Rezeptgenerator", 105, 290, { align: 'center' });
-      
-      doc.save(recipeName + ".pdf");
+      // Überprüfen, ob ein Bild hochgeladen wurde
+      const imageInput = document.getElementById('imageUpload');
+      if (imageInput.files && imageInput.files[0]) {
+        const file = imageInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          // evt.target.result enthält den DataURL des Bildes
+          generatePDF(evt.target.result, file.type);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        generatePDF(null, null);
+      }
     });
   </script>
 </body>
